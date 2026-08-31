@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wise Translations</title>
+<meta name="description" content="Search a catalog of translations across languages." />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <span class="brand">Wise Translations</span>
+      <a class="submit-link" href="SUBMIT_FORM_URL_PLACEHOLDER" target="_blank" rel="noopener noreferrer">
+        Submit a translation ↗
+      </a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1>Browse translations</h1>
+    <p class="subtitle">Search by title, translator, category, or language.</p>
+
+    <div class="filters">
+      <input id="q" type="text" placeholder="Search by title, translator, or category…" />
+      <input id="sourceLanguage" type="text" placeholder="Source language" list="source-languages" />
+      <input id="targetLanguage" type="text" placeholder="Target language" list="target-languages" />
+      <datalist id="source-languages"></datalist>
+      <datalist id="target-languages"></datalist>
+    </div>
+
+    <p id="empty" class="empty" hidden>
+      No translations found. Try adjusting your search, or
+      <a href="SUBMIT_FORM_URL_PLACEHOLDER" target="_blank" rel="noopener noreferrer">submit one</a>.
+    </p>
+
+    <div id="results" class="results"></div>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>
+      Have a translation to contribute? <a href="SUBMIT_FORM_URL_PLACEHOLDER" target="_blank" rel="noopener noreferrer">Submit it here ↗</a>
+      — new submissions are reviewed before they're added to this catalog.
+    </p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

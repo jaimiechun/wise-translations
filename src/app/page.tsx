@@ -1,69 +1,125 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useMemo, useState } from "react";
+import { Translation } from "@/lib/types";
+import TranslationCard from "@/components/TranslationCard";
+
+export default function HomePage() {
+  const [translations, setTranslations] = useState<Translation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [sourceLanguage, setSourceLanguage] = useState("");
+  const [targetLanguage, setTargetLanguage] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeout = setTimeout(async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams();
+        if (q) params.set("q", q);
+        if (sourceLanguage) params.set("sourceLanguage", sourceLanguage);
+        if (targetLanguage) params.set("targetLanguage", targetLanguage);
+        const res = await fetch(`/api/translations?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error("Failed to load translations.");
+        const data = await res.json();
+        setTranslations(data.translations);
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          setError("Couldn't load translations. Please try again.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    }, 250); // debounce
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeout);
+    };
+  }, [q, sourceLanguage, targetLanguage]);
+
+  const languageOptions = useMemo(() => {
+    const sources = new Set<string>();
+    const targets = new Set<string>();
+    translations.forEach((t) => {
+      sources.add(t.source_language);
+      targets.add(t.target_language);
+    });
+    return {
+      sources: Array.from(sources).sort(),
+      targets: Array.from(targets).sort(),
+    };
+  }, [translations]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Browse translations</h1>
+        <p className="mt-1 text-neutral-600">
+          Search approved translations by title, translator, category, or language.
+        </p>
+      </div>
+
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+        <input
+          type="text"
+          placeholder="Search by title, translator, or category…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
+        <input
+          type="text"
+          placeholder="Source language"
+          value={sourceLanguage}
+          onChange={(e) => setSourceLanguage(e.target.value)}
+          list="source-languages"
+          className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none sm:w-44"
+        />
+        <input
+          type="text"
+          placeholder="Target language"
+          value={targetLanguage}
+          onChange={(e) => setTargetLanguage(e.target.value)}
+          list="target-languages"
+          className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none sm:w-44"
+        />
+        <datalist id="source-languages">
+          {languageOptions.sources.map((l) => (
+            <option key={l} value={l} />
+          ))}
+        </datalist>
+        <datalist id="target-languages">
+          {languageOptions.targets.map((l) => (
+            <option key={l} value={l} />
+          ))}
+        </datalist>
+      </div>
+
+      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+
+      {loading ? (
+        <p className="text-sm text-neutral-500">Loading…</p>
+      ) : translations.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
+          No translations found. Try adjusting your search, or{" "}
+          <a href="/submit" className="underline">
+            submit one
           </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          .
         </div>
-      </main>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {translations.map((t) => (
+            <TranslationCard key={t.id} t={t} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

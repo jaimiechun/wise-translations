@@ -1,36 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Wise Translations
 
-## Getting Started
+This repo has two related pieces:
 
-First, run the development server:
+1. **`public-site/`** — a static, client-side catalog (search/browse only) meant for
+   **GitHub Pages**. No backend, no server. This is what visitors see.
+2. **The Next.js app** (`src/`) — the original dynamic app with a submit form and an
+   admin review queue. GitHub Pages can't run this (it needs a server), but it's useful
+   to run locally/on a real host if you want live submissions with a review flow instead
+   of an external form.
+
+See [`public-site/README` section below](#static-catalog--github-pages) for the Pages workflow.
+
+## Stack
+
+- Next.js (App Router) + TypeScript + Tailwind CSS
+- SQLite (via `better-sqlite3`) for metadata — stored at `data/translations.db`
+- Uploaded files stored on the local filesystem at `data/uploads/`
+
+Both `data/translations.db` and `data/uploads/` are gitignored — they're your local data, not code.
+
+## Getting started
 
 ```bash
+npm install
+cp .env.local.example .env.local   # then edit ADMIN_PASSWORD
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Set `ADMIN_PASSWORD` in `.env.local` before you rely on this for anything real — it gates
+the `/admin` review queue and defaults to `changeme` if unset.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Importing your existing files
 
-## Learn More
+If you already have Word/PDF translations on disk, bulk-import them (they'll be marked
+"approved" immediately, skipping the review queue) with a CSV manifest:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+node scripts/import-existing.mjs path/to/manifest.csv
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+See `scripts/manifest.example.csv` for the expected columns:
+`title,sourceLanguage,targetLanguage,translatorName,category,notes,filePath`
+(`filePath` can be relative to the CSV or absolute).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## How submissions work
 
-## Deploy on Vercel
+1. Someone fills out the form at `/submit` and uploads a file.
+2. It's stored on disk and inserted into the database with `status = 'pending'`.
+3. An admin signs in at `/admin`, reviews pending items, and approves or rejects them.
+4. Only `approved` translations show up in the public search on `/`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Notes on the admin auth
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Admin auth is intentionally simple: one shared password (`ADMIN_PASSWORD`) set as an
+httpOnly cookie on login. There's no per-user accounts. If you later want individual
+reviewer logins, audit trails, or role-based access, that's a natural next step — the
+`status`/`reviewed_at` columns in `translations` are already there to build on.
+
+## Deploying the Next.js app (not to GitHub Pages)
+
+This app writes to the local filesystem (`data/`), so it needs a host with a persistent
+disk (a VM, or a platform with a persistent volume) — not a purely serverless/edge
+deployment, where local writes don't survive between requests. If you outgrow local
+storage, swap the file read/write calls in `src/lib/db.ts` and the API routes for a
+cloud storage bucket and a hosted database.
+
+---
+
+## Static catalog / GitHub Pages
+
+`public-site/` is a plain HTML/CSS/JS site — no build step, no framework, no server. It
+reads `public-site/data/translations.json` and renders a searchable/filterable list,
+linking each entry to a file under `public-site/files/`. This is what GitHub Pages can
+actually host, since Pages only serves static files.
+
+### Rebuilding the catalog
+
+Keep a CSV manifest of your translations (title, languages, translator, category, notes,
+and a path to the source file) — see `scripts/manifest.example.csv` for the columns.
+Whenever it changes, regenerate the site's data and files:
+
+```bash
+node scripts/build-catalog.mjs path/to/manifest.csv
+```
+
+This **replaces** everything in `public-site/files/` and rewrites
+`public-site/data/translations.json` from the manifest, so the manifest (plus your
+original source files, kept somewhere durable) is the source of truth — not the
+generated `public-site/` output itself.
+
+### Deploying
+
+A GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) redeploys
+`public-site/` to GitHub Pages automatically on every push to `main` that touches that
+folder. One-time setup in the repo's GitHub settings: **Settings → Pages → Build and
+deployment → Source: GitHub Actions**.
+
+### Accepting new submissions
+
+Since the static site can't run a submission form itself, point people at an external
+form (a Google Form works well: file-upload question + short-answer fields for title/
+languages/translator/category). Then, periodically:
+
+1. Download new responses (Google Forms can save uploads straight to a Drive folder).
+2. Add a row per translation to your CSV manifest, pointing `filePath` at the downloaded
+   file.
+3. Run `node scripts/build-catalog.mjs path/to/manifest.csv` and commit/push — that's
+   your review step, since nothing reaches the public catalog until you do this.
+
+Replace the four `SUBMIT_FORM_URL_PLACEHOLDER` occurrences in `public-site/index.html`
+with your form's URL once you've created it.
