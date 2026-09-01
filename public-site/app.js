@@ -59,11 +59,11 @@
       if (t.translatorName) metaParts.push("translated by " + t.translatorName);
       if (t.category) metaParts.push(t.category);
 
+      var isExternal = /^https?:\/\//i.test(t.filePath);
+
       var fileLabel = [
         t.fileName,
-        " (",
-        t.fileSize != null ? formatBytes(t.fileSize) : "",
-        ")",
+        !isExternal ? " (" + (t.fileSize != null ? formatBytes(t.fileSize) : "") + ")" : "",
         t.submittedAt ? " · added " + t.submittedAt : "",
       ].join("");
 
@@ -77,9 +77,12 @@
         "</div>" +
         '<p class="card-meta">' + escapeHtml(metaParts.join(" · ")) + "</p>" +
         '<p class="card-file">' + escapeHtml(fileLabel) + "</p>" +
+        (t.sourceOrg ? '<p class="card-source">Hosted by ' + escapeHtml(t.sourceOrg) + "</p>" : "") +
         (t.notes ? '<p class="card-notes">' + escapeHtml(t.notes) + "</p>" : "") +
         "</div>" +
-        '<a class="download-btn" href="' + escapeHtml(t.filePath) + '" target="_blank" rel="noopener noreferrer">View / download</a>';
+        '<a class="download-btn" href="' + escapeHtml(t.filePath) + '" target="_blank" rel="noopener noreferrer">' +
+        (isExternal ? "View source ↗" : "View / download") +
+        "</a>";
 
       els.results.appendChild(card);
     });

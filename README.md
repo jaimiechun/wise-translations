@@ -91,6 +91,23 @@ This **replaces** everything in `public-site/files/` and rewrites
 original source files, kept somewhere durable) is the source of truth — not the
 generated `public-site/` output itself.
 
+### Linking to externally-hosted translations
+
+For translations you don't have the right to host copies of (someone else's files),
+add catalog entries that link out to the original instead of copying them in. Put the
+scraped/collected links in a JSON file under `scripts/sources/` (see
+`scripts/sources/ipr-northwestern-wise-scales.json` for the shape and a real example —
+74 IWISE water-insecurity-scale translations from Northwestern IPR), then run:
+
+```bash
+node scripts/add-external-links.mjs scripts/sources/<name>.json
+```
+
+This **appends** to `public-site/data/translations.json` (it doesn't replace it like
+`build-catalog.mjs` does) and doesn't copy any files — cards for these entries show
+"Hosted by \<org\>" and their download button reads "View source ↗", linking straight to
+the original file so there's no ambiguity about where it's actually hosted.
+
 ### Deploying
 
 A GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) redeploys
