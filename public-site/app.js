@@ -1,17 +1,20 @@
 (function () {
   "use strict";
 
-  var state = { all: [], q: "", sourceLanguage: "", targetLanguage: "" };
+  var state = { all: [], q: "", sourceLanguage: "", targetLanguage: "", fileType: "" };
 
   var els = {
     q: document.getElementById("q"),
     sourceLanguage: document.getElementById("sourceLanguage"),
     targetLanguage: document.getElementById("targetLanguage"),
+    fileType: document.getElementById("fileType"),
     results: document.getElementById("results"),
     empty: document.getElementById("empty"),
     sourceList: document.getElementById("source-languages"),
     targetList: document.getElementById("target-languages"),
   };
+
+  var FILE_TYPE_BADGE_CLASS = { pdf: "badge-pdf", doc: "badge-doc", docx: "badge-doc" };
 
   function escapeHtml(str) {
     var div = document.createElement("div");
@@ -36,6 +39,10 @@
     }
     if (state.sourceLanguage && t.sourceLanguage !== state.sourceLanguage) return false;
     if (state.targetLanguage && t.targetLanguage !== state.targetLanguage) return false;
+    if (state.fileType) {
+      var normalized = state.fileType === "doc" ? ["doc", "docx"] : [state.fileType];
+      if (normalized.indexOf(t.fileType) === -1) return false;
+    }
     return true;
   }
 
@@ -55,15 +62,17 @@
       var fileLabel = [
         t.fileName,
         " (",
-        (t.fileType || "").toUpperCase(),
-        t.fileSize != null ? ", " + formatBytes(t.fileSize) : "",
+        t.fileSize != null ? formatBytes(t.fileSize) : "",
         ")",
         t.submittedAt ? " · added " + t.submittedAt : "",
       ].join("");
 
+      var badgeClass = FILE_TYPE_BADGE_CLASS[t.fileType] || "badge-file";
+
       card.innerHTML =
         '<div class="card-body">' +
         '<div class="card-title-row">' +
+        '<span class="badge ' + badgeClass + '">' + escapeHtml((t.fileType || "").toUpperCase()) + "</span>" +
         "<h3>" + escapeHtml(t.title) + "</h3>" +
         "</div>" +
         '<p class="card-meta">' + escapeHtml(metaParts.join(" · ")) + "</p>" +
@@ -93,11 +102,13 @@
       .join("");
   }
 
-  ["q", "sourceLanguage", "targetLanguage"].forEach(function (key) {
-    els[key].addEventListener("input", function (e) {
+  ["q", "sourceLanguage", "targetLanguage", "fileType"].forEach(function (key) {
+    var handler = function (e) {
       state[key] = e.target.value;
       render();
-    });
+    };
+    els[key].addEventListener("input", handler);
+    els[key].addEventListener("change", handler);
   });
 
   fetch("data/translations.json")

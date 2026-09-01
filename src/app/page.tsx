@@ -11,6 +11,7 @@ export default function HomePage() {
   const [q, setQ] = useState("");
   const [sourceLanguage, setSourceLanguage] = useState("");
   const [targetLanguage, setTargetLanguage] = useState("");
+  const [fileType, setFileType] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -56,6 +57,12 @@ export default function HomePage() {
     };
   }, [translations]);
 
+  const visibleTranslations = useMemo(() => {
+    if (!fileType) return translations;
+    const normalized = fileType === "doc" ? ["doc", "docx"] : [fileType];
+    return translations.filter((t) => normalized.includes(t.file_type));
+  }, [translations, fileType]);
+
   return (
     <div>
       <div className="mb-8">
@@ -99,13 +106,22 @@ export default function HomePage() {
             <option key={l} value={l} />
           ))}
         </datalist>
+        <select
+          value={fileType}
+          onChange={(e) => setFileType(e.target.value)}
+          className="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-700 focus:border-neutral-500 focus:outline-none sm:w-36"
+        >
+          <option value="">All file types</option>
+          <option value="pdf">PDF</option>
+          <option value="doc">Word</option>
+        </select>
       </div>
 
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
       {loading ? (
         <p className="text-sm text-neutral-500">Loading…</p>
-      ) : translations.length === 0 ? (
+      ) : visibleTranslations.length === 0 ? (
         <div className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
           No translations found. Try adjusting your search, or{" "}
           <a href="/submit" className="underline">
@@ -115,7 +131,7 @@ export default function HomePage() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {translations.map((t) => (
+          {visibleTranslations.map((t) => (
             <TranslationCard key={t.id} t={t} />
           ))}
         </div>
