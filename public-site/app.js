@@ -24,7 +24,7 @@
   // index rather than a wall of cards.
   var COLLAPSE_THRESHOLD = 12;
 
-  var FILE_TYPE_BADGE_CLASS = { pdf: "badge-pdf", doc: "badge-doc", docx: "badge-doc" };
+  var FILE_TYPE_BADGE_CLASS = { pdf: "is-pdf", doc: "is-doc", docx: "is-doc" };
 
   var state = {
     docs: [],
@@ -44,13 +44,19 @@
     groupBy: document.getElementById("groupBy"),
     results: document.getElementById("results"),
     empty: document.getElementById("empty"),
-    stats: document.getElementById("catalog-stats"),
+    stats: document.getElementById("stats"),
+    sourceControl: document.getElementById("source-control"),
     resultCount: document.getElementById("result-count"),
     expandAll: document.getElementById("expandAll"),
     collapseAll: document.getElementById("collapseAll"),
     sourceList: document.getElementById("source-languages"),
     targetList: document.getElementById("target-languages"),
   };
+
+  var CHEVRON =
+    '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"' +
+    ' stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' +
+    '<polyline points="6 9 12 15 18 9"></polyline></svg>';
 
   function escapeHtml(str) {
     var div = document.createElement("div");
@@ -210,13 +216,14 @@
   function variantButton(variant) {
     var isExternal = /^https?:\/\//i.test(variant.filePath);
     var label = (variant.fileType || "file").toUpperCase();
-    var badgeClass = FILE_TYPE_BADGE_CLASS[variant.fileType] || "badge-file";
+    var typeClass = FILE_TYPE_BADGE_CLASS[variant.fileType] || "";
     var size = !isExternal && variant.fileSize != null ? " · " + formatBytes(variant.fileSize) : "";
     return (
-      '<a class="variant-btn ' + badgeClass + '" href="' + escapeHtml(variant.filePath) + '"' +
+      '<a class="file-btn ' + typeClass + '" href="' + escapeHtml(variant.filePath) + '"' +
       ' target="_blank" rel="noopener noreferrer"' +
       ' title="' + escapeHtml(variant.fileName || "") + '">' +
-      escapeHtml(label) + escapeHtml(size) + (isExternal ? " ↗" : " ↓") +
+      "<span>" + escapeHtml(label) + escapeHtml(size) + "</span>" +
+      '<span class="file-btn-arrow" aria-hidden="true">' + (isExternal ? "↗" : "↓") + "</span>" +
       "</a>"
     );
   }
@@ -235,14 +242,14 @@
     if (doc.category) metaParts.push(doc.category);
 
     return (
-      '<div class="card">' +
-      '<div class="card-body">' +
-      "<h3>" + escapeHtml(doc.title) + "</h3>" +
-      '<p class="card-meta">' + escapeHtml(metaParts.join(" · ")) + "</p>" +
-      (doc.sourceOrg ? '<p class="card-source">Hosted by ' + escapeHtml(doc.sourceOrg) + "</p>" : "") +
-      (doc.notes ? '<p class="card-notes">' + escapeHtml(doc.notes) + "</p>" : "") +
+      '<div class="entry">' +
+      '<div class="entry-body">' +
+      '<p class="entry-title">' + escapeHtml(doc.title) + "</p>" +
+      '<p class="entry-meta">' + escapeHtml(metaParts.join(" · ")) + "</p>" +
+      (doc.sourceOrg ? '<p class="entry-source">Hosted by ' + escapeHtml(doc.sourceOrg) + "</p>" : "") +
+      (doc.notes ? '<p class="entry-note">' + escapeHtml(doc.notes) + "</p>" : "") +
       "</div>" +
-      '<div class="card-actions">' + doc.variants.map(variantButton).join("") + "</div>" +
+      '<div class="entry-links">' + doc.variants.map(variantButton).join("") + "</div>" +
       "</div>"
     );
   }
@@ -255,10 +262,14 @@
       '<section class="group' + (collapsed ? " is-collapsed" : "") + '">' +
       '<button type="button" class="group-header" data-group="' + escapeHtml(group.name) + '"' +
       ' aria-expanded="' + (collapsed ? "false" : "true") + '">' +
-      '<span class="group-caret" aria-hidden="true">▶</span>' +
+      '<span class="group-heading">' +
       '<span class="group-name">' + escapeHtml(group.name) + "</span>" +
-      '<span class="group-count">' + plural(group.docs.length, "document") + " · " + plural(fileCount, "file") + "</span>" +
       (summary ? '<span class="group-summary">' + escapeHtml(summary) + "</span>" : "") +
+      "</span>" +
+      '<span class="group-count">' +
+      plural(group.docs.length, "document") + " · " + plural(fileCount, "file") +
+      '<span class="group-chev" aria-hidden="true">' + CHEVRON + "</span>" +
+      "</span>" +
       "</button>" +
       '<div class="group-body">' + group.docs.map(cardHtml).join("") + "</div>" +
       "</section>"
@@ -288,9 +299,10 @@
       if (doc.targetLanguage) languages.add(doc.targetLanguage);
       if (doc.country) countries.add(doc.country);
     });
-    els.stats.textContent =
-      plural(docs.length, "document") + " · " + plural(rows.length, "file") + " · " +
-      plural(languages.size, "language") + " · " + plural(countries.size, "country").replace("countrys", "countries");
+    els.stats.innerHTML =
+      "<span><b>" + docs.length + "</b> documents</span>" +
+      "<span><b>" + languages.size + "</b> languages</span>" +
+      "<span><b>" + countries.size + "</b> countries</span>";
   }
 
   function populateLanguageOptions() {
@@ -310,8 +322,7 @@
     els.targetList.innerHTML = options(targets);
     // A filter with a single possible value is just clutter — every entry
     // matches it. Show it only once the catalog actually has a choice to make.
-    els.sourceLanguage.hidden = sources.size < 2;
-    els.targetLanguage.hidden = targets.size < 2;
+    els.sourceControl.hidden = sources.size < 2;
   }
 
   ["q", "sourceLanguage", "targetLanguage", "fileType", "groupBy"].forEach(function (key) {

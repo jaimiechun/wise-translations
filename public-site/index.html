@@ -3,49 +3,80 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Wise Translations</title>
-<meta name="description" content="Search a catalog of translations across languages." />
+<title>WISE Translations</title>
+<meta name="description" content="Translated WISE scales, manuals and worksheets, by language." />
+<link rel="icon" href="assets/logo.png" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" />
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="site-header">
-    <div class="wrap">
-      <span class="brand">WISE Translations</span>
-      <a class="submit-link" href="SUBMIT_FORM_URL_PLACEHOLDER" target="_blank" rel="noopener noreferrer">
-        Submit a translation ↗
+<div id="app">
+  <header id="header">
+    <div id="brand">
+      <img id="brand-logo" src="assets/logo.png" alt="" />
+      <div>
+        <h1>WISE Translations</h1>
+        <p id="subtitle">Translated WISE scales, manuals and worksheets, by language</p>
+      </div>
+    </div>
+    <div id="header-right">
+      <div id="stats"></div>
+      <a id="submit-open" href="SUBMIT_FORM_URL_PLACEHOLDER" target="_blank" rel="noopener noreferrer">
+        Submit a translation
       </a>
     </div>
   </header>
 
-  <main class="wrap">
-    <h1>Browse translations</h1>
-    <p class="subtitle" id="catalog-stats">Search by title, translator, category, country, or language.</p>
+  <main id="main">
+    <section id="controls">
+      <div id="search-wrap">
+        <input type="search" id="q" placeholder="Search by title, language, country, or document type" autocomplete="off" />
+        <span id="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+          </svg>
+        </span>
+      </div>
 
-    <div class="filters">
-      <input id="q" type="text" placeholder="Search title, language, country…" />
-      <input id="targetLanguage" type="text" placeholder="Language" list="target-languages" />
-      <input id="sourceLanguage" type="text" placeholder="Source language" list="source-languages" hidden />
+      <div class="control-row">
+        <label class="control">
+          <span class="control-label">Language</span>
+          <input id="targetLanguage" type="text" placeholder="All languages" list="target-languages" />
+        </label>
+        <label class="control" id="source-control" hidden>
+          <span class="control-label">Source language</span>
+          <input id="sourceLanguage" type="text" placeholder="All" list="source-languages" />
+        </label>
+        <label class="control">
+          <span class="control-label">Format</span>
+          <select id="fileType">
+            <option value="">All formats</option>
+            <option value="pdf">PDF</option>
+            <option value="doc">Word</option>
+          </select>
+        </label>
+        <label class="control">
+          <span class="control-label">Group by</span>
+          <select id="groupBy">
+            <option value="targetLanguage">Language</option>
+            <option value="region">Region</option>
+            <option value="country">Country</option>
+            <option value="category">Document type</option>
+          </select>
+        </label>
+      </div>
       <datalist id="source-languages"></datalist>
       <datalist id="target-languages"></datalist>
-      <select id="fileType">
-        <option value="">All file types</option>
-        <option value="pdf">PDF</option>
-        <option value="doc">Word</option>
-      </select>
-      <select id="groupBy">
-        <option value="targetLanguage">Group by language</option>
-        <option value="region">Group by region</option>
-        <option value="country">Group by country</option>
-        <option value="category">Group by document type</option>
-      </select>
-    </div>
+    </section>
 
     <div class="toolbar">
       <span id="result-count" class="result-count"></span>
-      <span class="toolbar-actions">
-        <button type="button" id="expandAll" class="link-btn">Expand all</button>
-        <span class="toolbar-sep">·</span>
-        <button type="button" id="collapseAll" class="link-btn">Collapse all</button>
+      <span class="toolbar-bulk">
+        <button type="button" id="expandAll">Expand all</button>
+        <span aria-hidden="true">·</span>
+        <button type="button" id="collapseAll">Collapse all</button>
       </span>
     </div>
 
@@ -54,16 +85,18 @@
       <a href="SUBMIT_FORM_URL_PLACEHOLDER" target="_blank" rel="noopener noreferrer">submit one</a>.
     </p>
 
-    <div id="results" class="results"></div>
+    <div id="results"></div>
+
+    <footer id="site-footer">
+      <p>
+        Have a translation to contribute?
+        <a href="SUBMIT_FORM_URL_PLACEHOLDER" target="_blank" rel="noopener noreferrer">Submit it here</a>
+        — new submissions are reviewed before they're added to this catalog.
+      </p>
+    </footer>
   </main>
+</div>
 
-  <footer class="site-footer wrap">
-    <p>
-      Have a translation to contribute? <a href="SUBMIT_FORM_URL_PLACEHOLDER" target="_blank" rel="noopener noreferrer">Submit it here ↗</a>
-      — new submissions are reviewed before they're added to this catalog.
-    </p>
-  </footer>
-
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

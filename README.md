@@ -92,6 +92,25 @@ Grouping by region and country relies on the `region` and `country` fields, whic
 `add-external-links.mjs` derives (see `REGIONS` in that file). Entries without a country —
 general manuals and worksheets — collect under "General materials".
 
+### Design
+
+The visual design deliberately mirrors the WISE Data Collection map
+([jaimiechun/lib-map-v2](https://github.com/jaimiechun/lib-map-v2)) so the two sites read
+as one project. `styles.css` copies that repo's tokens verbatim — warm neutral surfaces,
+the `--teal` accent, Geist from Google Fonts, `--radius-card` / `--radius-control`,
+`--shadow-float` — and reuses its component patterns: the header (logo, title, bold stat
+numbers, dark "submit" button), the floating controls card, and the collapsible group
+card with a pill-shaped count and rotating chevron.
+
+Two intentional deviations:
+
+- **Light only, no dark mode.** The map has no dark theme, so matching it meant dropping
+  the one this site used to have.
+- **Format tints.** The map's palette has no red, so Word reuses its blue "ongoing" tint
+  while PDF gets a terracotta mixed to suit the warm palette (4.85:1 contrast, passes AA).
+
+If the map's tokens change, re-copy the `:root` block at the top of `styles.css`.
+
 ### Rebuilding the catalog
 
 Keep a CSV manifest of your translations (title, languages, translator, category, notes,
