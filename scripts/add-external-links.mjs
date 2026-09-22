@@ -50,6 +50,37 @@ const COUNTRY_TOKENS = new Set([
   "Nigeria", "Brazil", "Haiti", "Haitian",
 ]);
 
+// Countries are grouped into regions so the site can offer a geographic view
+// alongside the alphabetical language view.
+const REGIONS = {
+  "West Africa": ["Benin", "Burkina Faso", "Ghana", "Guinea", "Ivory Coast", "Mali", "Nigeria", "Senegal", "Togo"],
+  "Central Africa": ["Cameroon", "Congo Brazzaville", "Gabon"],
+  "East Africa": ["Ethiopia", "Kenya", "Mauritius", "Tanzania", "Uganda"],
+  "Southern Africa": ["Namibia", "South Africa", "Zambia", "Zimbabwe"],
+  "North Africa": ["Algeria", "Egypt", "Morocco", "Tunisia"],
+  "South Asia": ["Bangladesh", "India"],
+  "East & Southeast Asia": ["China", "Indonesia"],
+  "Central Asia": ["Tajikistan"],
+  "Latin America & Caribbean": ["Brazil", "Guatemala", "Haiti", "Honduras", "Peru"],
+};
+
+const COUNTRY_TO_REGION = {};
+for (const [region, countries] of Object.entries(REGIONS)) {
+  for (const country of countries) COUNTRY_TO_REGION[country] = region;
+}
+
+// Country names that the title-parsing heuristic gets slightly wrong.
+const COUNTRY_ALIASES = { "South African": "South Africa", Haitian: "Haiti" };
+
+// Countries for entries whose titles name only a language, not a country.
+const COUNTRY_OVERRIDES = {
+  "Quechua Peruvian Spanish HWISE": "Peru",
+  "Haiti Kreyol HWISE": "Haiti",
+  "Russian Tajik HWISE": "Tajikistan",
+  "Indonesian HWISE": "Indonesia",
+  "Indonesian HWISE-4": "Indonesia",
+};
+
 // Manual overrides for entries that don't follow "<Country> <Language> IWISE".
 const LANGUAGE_OVERRIDES = {
   "Spanish HWISE": "Spanish",
@@ -82,7 +113,9 @@ function parseTitleAndType(text) {
 }
 
 function inferLanguageAndCountry(base) {
-  if (LANGUAGE_OVERRIDES[base]) return { language: LANGUAGE_OVERRIDES[base], country: null };
+  if (LANGUAGE_OVERRIDES[base]) {
+    return { language: LANGUAGE_OVERRIDES[base], country: COUNTRY_OVERRIDES[base] || null };
+  }
 
   const words = base.replace(/\bIWISE\b/i, "").trim().split(/\s+/);
   const countryWords = [];
@@ -92,8 +125,9 @@ function inferLanguageAndCountry(base) {
     i++;
   }
   const languageWords = words.slice(i);
+  const rawCountry = countryWords.length ? countryWords.join(" ") : null;
   return {
-    country: countryWords.length ? countryWords.join(" ") : null,
+    country: rawCountry ? COUNTRY_ALIASES[rawCountry] || rawCountry : null,
     language: languageWords.length ? languageWords.join(" ") : base,
   };
 }
@@ -139,6 +173,8 @@ const newEntries = links.map((link) => {
     title,
     sourceLanguage: "English",
     targetLanguage: language,
+    country: country || null,
+    region: country ? COUNTRY_TO_REGION[country] || null : null,
     translatorName: null,
     category: categoryFor(link.text),
     notes: link.note || null,

@@ -72,9 +72,25 @@ cloud storage bucket and a hosted database.
 ## Static catalog / GitHub Pages
 
 `public-site/` is a plain HTML/CSS/JS site — no build step, no framework, no server. It
-reads `public-site/data/translations.json` and renders a searchable/filterable list,
-linking each entry to a file under `public-site/files/`. This is what GitHub Pages can
-actually host, since Pages only serves static files.
+reads `public-site/data/translations.json` and renders a searchable/filterable catalog,
+linking each entry to a file under `public-site/files/` (or to an external URL). This is
+what GitHub Pages can actually host, since Pages only serves static files.
+
+How the browse page is organized:
+
+- **Documents, not files.** Rows in `translations.json` that share a title, language, and
+  category are merged into one card whose buttons are the available formats (Word / PDF),
+  rather than listing the same document twice.
+- **Grouped sections** with a group-by control: language, region, country, or document
+  type. Each header shows document/file counts and a preview of what's inside.
+- **Collapsed by default past 12 groups**, so the language view reads as a browsable
+  index; searching auto-expands whatever matched, and Expand/Collapse all is always there.
+- **Filters hide themselves when useless** — the source-language box stays hidden while
+  every entry shares one source language.
+
+Grouping by region and country relies on the `region` and `country` fields, which
+`add-external-links.mjs` derives (see `REGIONS` in that file). Entries without a country —
+general manuals and worksheets — collect under "General materials".
 
 ### Rebuilding the catalog
 

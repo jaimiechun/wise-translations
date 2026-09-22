@@ -19,12 +19,12 @@
 
   <main class="wrap">
     <h1>Browse translations</h1>
-    <p class="subtitle">Search by title, translator, category, or language.</p>
+    <p class="subtitle" id="catalog-stats">Search by title, translator, category, country, or language.</p>
 
     <div class="filters">
-      <input id="q" type="text" placeholder="Search by title, translator, or category…" />
-      <input id="sourceLanguage" type="text" placeholder="Source language" list="source-languages" />
-      <input id="targetLanguage" type="text" placeholder="Target language" list="target-languages" />
+      <input id="q" type="text" placeholder="Search title, language, country…" />
+      <input id="targetLanguage" type="text" placeholder="Language" list="target-languages" />
+      <input id="sourceLanguage" type="text" placeholder="Source language" list="source-languages" hidden />
       <datalist id="source-languages"></datalist>
       <datalist id="target-languages"></datalist>
       <select id="fileType">
@@ -32,6 +32,21 @@
         <option value="pdf">PDF</option>
         <option value="doc">Word</option>
       </select>
+      <select id="groupBy">
+        <option value="targetLanguage">Group by language</option>
+        <option value="region">Group by region</option>
+        <option value="country">Group by country</option>
+        <option value="category">Group by document type</option>
+      </select>
+    </div>
+
+    <div class="toolbar">
+      <span id="result-count" class="result-count"></span>
+      <span class="toolbar-actions">
+        <button type="button" id="expandAll" class="link-btn">Expand all</button>
+        <span class="toolbar-sep">·</span>
+        <button type="button" id="collapseAll" class="link-btn">Collapse all</button>
+      </span>
     </div>
 
     <p id="empty" class="empty" hidden>
